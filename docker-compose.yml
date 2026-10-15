@@ -30,6 +30,8 @@ services:
       - prometheus_data:/prometheus
     ports:
       - "${PROMETHEUS_PORT:-9190}:9090"   # host view (Grafana is the UI)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Linux: resolve the host-run API
     networks:
       - platform
 
