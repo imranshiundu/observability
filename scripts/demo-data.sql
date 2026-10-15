@@ -11,9 +11,11 @@ BEGIN
   END IF;
 END $$;
 
--- demo users (45), across the last 30 days
+-- demo users (45), across the last 30 days.
+-- NOTE: roles are NOT a users column (they live in the user_roles join
+-- table) — the role rows are seeded right after.
 INSERT INTO users (id, email, email_lookup, password_hash, name, email_verified,
-                   email_verification_token, roles, two_factor_enabled, created_at, updated_at)
+                   email_verification_token, two_factor_enabled, created_at, updated_at)
 SELECT
   gen_random_uuid()::text,
   lower('demo' || n || '@iloveshopping.ke'),
@@ -22,11 +24,16 @@ SELECT
   'Demo Customer ' || n,
   now() - (random() * interval '30 days'),
   NULL,
-  'USER',
   false,
   now() - (random() * interval '30 days'),
   now() - (random() * interval '30 days')
 FROM generate_series(1, 45) AS n;
+
+-- every demo user is a plain USER
+INSERT INTO user_roles (user_id, role)
+SELECT id, 'USER' FROM users
+WHERE email LIKE 'demo%@iloveshopping.ke'
+  AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = users.id);
 
 -- 120 orders with items + payment rows, mixed types and statuses
 DO $demo$
