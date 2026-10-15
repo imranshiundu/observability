@@ -63,7 +63,9 @@ BEGIN
     ship := CASE WHEN sub > 5000 THEN 0 ELSE 200 END;
     tot  := sub + taxamt + ship;
 
-    st := (ARRAY['CONFIRMED','CONFIRMED','DELIVERED','DELIVERED','PROCESSING','SHIPPED','REFUNDED'])[floor(random()*7+1)];
+    -- the pool deliberately contains stale PENDING/EXPIRED orders so the
+    -- cart-abandonment gauge reads meaningful history from day one
+    st := (ARRAY['CONFIRMED','CONFIRMED','DELIVERED','DELIVERED','PROCESSING','SHIPPED','REFUNDED','PENDING','EXPIRED','PENDING'])[floor(random()*10+1)];
 
     IF random() < 0.55 THEN
       SELECT id FROM users ORDER BY random() LIMIT 1 INTO uid;
@@ -97,22 +99,29 @@ BEGIN
     INSERT INTO order_items (id, order_id, product_id, name, price, quantity, total, created_at)
     VALUES (itid, oid, p.id, p.name, p.price, qty, p.price * qty, when_);
 
-    -- a payment row for every non-cancelled demo order
-    IF st NOT IN ('CANCELLED') THEN
+    -- payments: paid orders SUCCEEDED, refunds REFUNDED, and the stale
+    -- PENDING/EXPIRED ones carry a FAILED attempt with a realistic reason
+    -- so the payment-failure analysis panel has history too.
+    IF st IN ('PENDING', 'EXPIRED') THEN
       prov := CASE WHEN random() < 0.5 THEN 'MPESA' ELSE 'STRIPE' END;
       INSERT INTO payments (
         id, order_id, provider, provider_id, amount, currency, status,
         metadata, created_at, updated_at
       ) VALUES (
-        gen_random_uuid()::text,
-        oid,
-        prov,
-        'demo-pay-' || i,
-        tot, 'KES',
+        gen_random_uuid()::text, oid, prov, 'demo-pay-' || i, tot, 'KES', 'FAILED',
+        jsonb_build_object('reason',
+          (ARRAY['stk_timeout','callback_failure','card_declined','insufficient_funds','amount_mismatch'])[floor(random()*5+1)]),
+        when_ + interval '2 minutes', when_ + interval '2 minutes'
+      );
+    ELSIF st <> 'CANCELLED' THEN
+      prov := CASE WHEN random() < 0.5 THEN 'MPESA' ELSE 'STRIPE' END;
+      INSERT INTO payments (
+        id, order_id, provider, provider_id, amount, currency, status,
+        metadata, created_at, updated_at
+      ) VALUES (
+        gen_random_uuid()::text, oid, prov, 'demo-pay-' || i, tot, 'KES',
         CASE WHEN st = 'REFUNDED' THEN 'REFUNDED' ELSE 'SUCCEEDED' END,
-        NULL,
-        when_ + interval '2 minutes',
-        when_ + interval '2 minutes'
+        NULL, when_ + interval '2 minutes', when_ + interval '2 minutes'
       );
     END IF;
   END LOOP;

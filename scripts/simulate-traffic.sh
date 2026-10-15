@@ -47,27 +47,60 @@ burst() {
 }
 
 demo_checkout() {
-  # A registered user's happy path: register if needed, login, add to cart, checkout.
+  # A registered user's full flow: register if needed, login, refresh the
+  # token (JWT refresh metrics), add to cart, checkout, then attempt an
+  # M-Pesa STK push to the sandbox number - the platform's watchdog expires
+  # the unanswered session after ~2 minutes and the payment-failure counter
+  # ticks with a real reason (stk_timeout).
   local email="$1"; local password="demo-traffic-123!"
-  local token
-  token=$(curl -s -X POST "$API/auth/login" -H "Content-Type: application/json" \
-    -d "{\"email\":\"$email\",\"password\":\"$password\"}" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['accessToken'])" 2>/dev/null || true)
+  local login_json
+  login_json=$(curl -s -X POST "$API/auth/login" -H "Content-Type: application/json" \
+    -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null || true)
+  local token refresh
+  token=$(echo "$login_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['accessToken'])" 2>/dev/null || true)
+  refresh=$(echo "$login_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['refreshToken'])" 2>/dev/null || true)
   if [ -z "$token" ]; then
     curl -s -X POST "$API/auth/register" -H "Content-Type: application/json" \
       -d "{\"email\":\"$email\",\"password\":\"$password\",\"name\":\"Demo Traffic\",\"captchaToken\":\"dev-test-secret\"}" > /dev/null
-    token=$(curl -s -X POST "$API/auth/login" -H "Content-Type: application/json" \
-      -d "{\"email\":\"$email\",\"password\":\"$password\"}" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['accessToken'])" 2>/dev/null || true)
+    login_json=$(curl -s -X POST "$API/auth/login" -H "Content-Type: application/json" \
+      -d "{\"email\":\"$email\",\"password\":\"$password\"}")
+    token=$(echo "$login_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['accessToken'])" 2>/dev/null || true)
+    refresh=$(echo "$login_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['refreshToken'])" 2>/dev/null || true)
   fi
   if [ -z "$token" ]; then
     echo "simulate: could not log in $email"
     return
   fi
+
+  # JWT refresh: rotate the fresh token (success path), and every third
+  # wave present a garbage token too (invalid_token failure path)
+  if [ -n "$refresh" ]; then
+    curl -s -X POST "$API/auth/refresh" -H "Content-Type: application/json" \
+      -d "{\"refreshToken\":\"$refresh\"}" > /dev/null
+    if [ $((RANDOM % 3)) -eq 0 ]; then
+      curl -s -o /dev/null -X POST "$API/auth/refresh" -H "Content-Type: application/json" \
+        -d '{\"refreshToken\":\"garbage.token.value\"}'
+    fi
+  fi
+
   local prod
   prod=$(curl -s "$API/products?size=3" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['products'][0]['id'])" 2>/dev/null || true)
   [ -z "$prod" ] && return
   curl -s -X POST "$API/cart/items" -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d "{\"productId\":\"$prod\",\"quantity\":$((RANDOM % 3 + 1))}" > /dev/null
-  curl -s -X POST "$API/orders/checkout" -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
-    -d '{"shippingAddress":{"name":"Demo User","line1":"1 Demo Lane","city":"Nairobi","state":"Nairobi","postalCode":"00100","country":"KE","phone":"+254700000000"},"billingAddress":{"name":"Demo User","line1":"1 Demo Lane","city":"Nairobi","state":"Nairobi","postalCode":"00100","country":"KE","phone":"+254700000000"}}' > /dev/null
+  local order_json
+  order_json=$(curl -s -X POST "$API/orders/checkout" -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
+    -d '{"shippingAddress":{"name":"Demo User","line1":"1 Demo Lane","city":"Nairobi","state":"Nairobi","postalCode":"00100","country":"KE","phone":"+254700000000"},"billingAddress":{"name":"Demo User","line1":"1 Demo Lane","city":"Nairobi","state":"Nairobi","postalCode":"00100","country":"KE","phone":"+254700000000"}}')
+
+  # invalid-payment attempt: real STK push to the sandbox number; the
+  # platform cannot receive the callback locally, so the watchdog marks
+  # it FAILED (reason: stk_timeout) after MPESA_STK_TIMEOUT_SECONDS
+  local order_id
+  order_id=$(echo "$order_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['id'])" 2>/dev/null || true)
+  if [ -n "$order_id" ]; then
+    curl -s -o /dev/null -X POST "$API/orders/payments/mpesa/stk-push" \
+      -H "Content-Type: application/json" \
+      -d "{\"orderId\":\"$order_id\",\"phoneNumber\":\"254708374149\"}"
+  fi
 }
 
 if $DO_BURST; then

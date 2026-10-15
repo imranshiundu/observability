@@ -1,5 +1,7 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "graphTooltip": 0,
   "id": null,
@@ -10,14 +12,40 @@
       "type": "bargauge",
       "title": "Top products by revenue",
       "description": "Best sellers by KES over the selected range.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "currencyKES", "custom": {} }, "overrides": [] },
-      "options": { "orientation": "horizontal", "reduceOptions": { "calcs": ["sum"], "fields": "" }, "showUnfilled": true },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKES",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT p.name AS product, sum(oi.total)::float8 AS revenue FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN orders o ON oi.order_id = o.id WHERE o.status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND o.created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY p.name ORDER BY 2 DESC LIMIT 8",
           "format": "table"
@@ -29,14 +57,40 @@
       "type": "bargauge",
       "title": "Top products by units sold",
       "description": "Quantity sold, so premium-priced but low-volume products don't hide.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
-      "fieldConfig": { "defaults": { "decimals": 0, "custom": {} }, "overrides": [] },
-      "options": { "orientation": "horizontal", "reduceOptions": { "calcs": ["sum"], "fields": "" }, "showUnfilled": true },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT p.name AS product, sum(oi.quantity)::float8 AS units FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN orders o ON oi.order_id = o.id WHERE o.status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND o.created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY p.name ORDER BY 2 DESC LIMIT 8",
           "format": "table"
@@ -48,23 +102,51 @@
       "type": "timeseries",
       "title": "Payments by provider over time",
       "description": "M-Pesa vs Stripe completions scraped from the API.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 15 } }, "overrides": [] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "increase(ils_orders_paid_total[$__rate_interval])",
           "legendFormat": "paid orders"
         },
         {
           "refId": "B",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "sum by (provider, reason) (increase(ils_payment_failed_total[$__range]))",
           "instant": true,
-          "legendFormat": "{{provider}} — {{reason}}"
+          "legendFormat": "{{provider}} \u2014 {{reason}}"
         }
       ]
     },
@@ -73,14 +155,59 @@
       "type": "gauge",
       "title": "Average rating",
       "description": "Approved reviews only, across the whole catalogue.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
-      "fieldConfig": { "defaults": { "min": 0, "max": 5, "unit": "none", "decimals": 2, "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 3 }, { "color": "green", "value": 4 }] } }, "overrides": [] },
-      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" }, "showThresholdLabels": true, "showThresholdMarkers": true },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 5,
+          "unit": "none",
+          "decimals": 2,
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 3
+              },
+              {
+                "color": "green",
+                "value": 4
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT coalesce(round(avg(rating)::numeric, 2), 0) AS avg_rating FROM reviews WHERE status = 'APPROVED'",
           "format": "table"
@@ -92,14 +219,39 @@
       "type": "table",
       "title": "Average rating by category",
       "description": "Mean star rating of approved reviews per category.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 18 },
-      "fieldConfig": { "defaults": { "custom": { "align": "auto" } }, "overrides": [] },
-      "options": { "sortBy": [{ "displayName": "Average rating", "desc": true }] },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Average rating",
+            "desc": true
+          }
+        ]
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT c.name AS category, round(avg(r.rating)::numeric, 2) AS average_rating, count(r.id) AS reviews FROM categories c JOIN products p ON p.category_id = c.id LEFT JOIN reviews r ON r.product_id = p.id AND r.status = 'APPROVED' GROUP BY c.name ORDER BY 2 DESC NULLS LAST",
           "format": "table"
@@ -109,22 +261,70 @@
     {
       "id": 6,
       "type": "table",
-      "title": "Correlated: rating × revenue per category",
-      "description": "CORRELATED METRIC — rating alone or revenue alone never tells this story: whether higher-rated products actually sell more.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 18 },
+      "title": "Correlated: rating \u00d7 revenue per category",
+      "description": "CORRELATED METRIC \u2014 rating alone or revenue alone never tells this story: whether higher-rated products actually sell more.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
       "fieldConfig": {
-        "defaults": { "custom": {} },
+        "defaults": {
+          "custom": {}
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "revenue" }, "properties": [{ "id": "unit", "value": "currencyKES" }] },
-          { "matcher": { "id": "byName", "options": "avg_rating" }, "properties": [{ "id": "unit", "value": "none" }, { "id": "custom.cellOptions", "value": { "type": "color-text" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "revenue"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyKES"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "avg_rating"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
         ]
       },
-      "options": { "sortBy": [{ "displayName": "revenue", "desc": true }] },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "revenue",
+            "desc": true
+          }
+        ]
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT c.name AS category, sum(oi.total)::float8 AS revenue, round(coalesce(avg(r.rating), 0)::numeric, 2) AS avg_rating FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN categories c ON p.category_id = c.id JOIN orders o ON oi.order_id = o.id LEFT JOIN reviews r ON r.product_id = p.id AND r.status = 'APPROVED' WHERE o.status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND o.created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY c.name HAVING sum(oi.total) > 0 ORDER BY 2 DESC",
           "format": "table"
@@ -136,16 +336,122 @@
       "type": "table",
       "title": "Low-stock watchlist",
       "description": "Anything below ten units needs a restock decision.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 27 },
-      "fieldConfig": { "defaults": { "custom": { "align": "auto" } }, "overrides": [{ "matcher": { "id": "byName", "options": "stock" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-text" } }, { "id": "thresholds", "value": { "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 5 }, { "color": "green", "value": 10 }] }, "mode": "gradient", "scheme": "continuous-BlYlRd" }] }] },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "stock"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 5
+                    },
+                    {
+                      "color": "green",
+                      "value": 10
+                    }
+                  ]
+                },
+                "mode": "gradient",
+                "scheme": "continuous-BlYlRd"
+              }
+            ]
+          }
+        ]
+      },
       "options": {},
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT name, sku, stock, is_active FROM products WHERE stock < 10 ORDER BY stock ASC, name LIMIT 20",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "piechart",
+      "title": "Orders by customer type",
+      "description": "Spec requirement on this dashboard: registered accounts vs guest buyers.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT (CASE WHEN user_id IS NULL THEN 'guest' ELSE 'registered' END) AS customer_type, count(*)::float8 AS orders FROM orders WHERE created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY 1",
           "format": "table"
         }
       ]
@@ -153,11 +459,19 @@
   ],
   "refresh": "30s",
   "schemaVersion": 41,
-  "tags": ["iloveshopping", "product"],
-  "templating": { "list": [] },
-  "time": { "from": "now-30d", "to": "now" },
+  "tags": [
+    "iloveshopping",
+    "product"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
   "timezone": "browser",
-  "title": "i-love-shopping · Product & customer",
+  "title": "i-love-shopping \u00b7 Product & customer",
   "uid": "ils-product-customer",
   "version": 1
 }
