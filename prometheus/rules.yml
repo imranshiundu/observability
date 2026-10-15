@@ -1,0 +1,52 @@
+# Alert rules evaluated by Prometheus; Grafana unified alerting reads them and
+# emails via MailHog (datasources → alert contact point).
+#
+# Guidance used here:
+#   - Critical = customer-impacting right now; page-worthy.
+#   - Warning = needs attention soon, not at 03:00.
+#   - for: keeps noisy counters quiet and makes every alert meaningful.
+groups:
+  - name: iloveshopping-availability
+    rules:
+      - alert: APIDown
+        expr: up{job="iloveshopping-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "i-love-shopping API is down"
+          description: "No successful scrape of the API's /actuator/prometheus endpoint for over a minute. The storefront cannot serve customers."
+
+      - alert: HighApiErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5% of requests are 5xx"
+          description: "Sustained internal errors for five minutes — customers are likely affected."
+
+      - alert: FailedLoginsSpike
+        expr: change(ils_auth_login_failed_total[10m]) > 10
+        for: 0m
+        labels:
+          severity: warning
+          annotations:
+            summary: "Burst of failed logins"
+            description: "Over ten failed login attempts in ten minutes — possible credential stuffing or a broken auth dependency."
+
+  - name: iloveshopping-performance
+    rules:
+      - alert: SlowApiP95
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[10m])) by (le))
+          > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 over 2s for 5 minutes"
+          description: "Sustained latency regression across the platform."

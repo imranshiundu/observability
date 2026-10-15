@@ -1,0 +1,36 @@
+// Alloy: collect every platform container's logs into Loki.
+// Mounts the docker socket read-only and keeps container names as the
+// "service" label, so dashboards filter cleanly by iloveshopping-*.
+
+discovery.docker "platform" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "platform" {
+  targets = discovery.docker.platform.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(iloveshopping-.+)"
+    target_label  = "service"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(iloveshopping|prometheus|grafana|loki|alloy)-?.+"
+    target_label  = "job"
+    replacement   = "observability"
+  }
+}
+
+loki.source.docker "platform" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.platform.output
+  labels     = { job = "iloveshopping", stack = "platform" }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

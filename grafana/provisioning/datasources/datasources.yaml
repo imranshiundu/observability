@@ -1,0 +1,37 @@
+apiVersion: 1
+
+# Datasources for Grafana — provisioned on first start, editable names.
+# All three live on the shared platform network.
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+      minInterval: 15s
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      maxLines: 1000
+
+  - name: i-love-shopping database
+    uid: postgres
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      database: iloveshopping
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false

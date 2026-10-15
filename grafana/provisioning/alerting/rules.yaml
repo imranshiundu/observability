@@ -1,0 +1,133 @@
+apiVersion: 1
+
+# Unified-alerting rules provisioned in Grafana. Each rule evaluates a
+# Prometheus query every minute and emails the MailHog contact point when it
+# fires. Thresholds and `for:` windows were chosen to avoid fatigue:
+# genuine customer impact only, nothing that flaps.
+groups:
+  - orgId: 1
+    name: iloveshopping-availability
+    folder: i-love-shopping
+    interval: 1m
+    rules:
+      - uid: api-down
+        title: "i-love-shopping API down"
+        condition: C
+        for: 1m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "i-love-shopping API is down or unreachable"
+          description: "Prometheus has not scraped the API's management endpoint for over a minute; guests and customers are cut off."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: 'up{job="iloveshopping-api"}'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              conditions:
+                - type: query
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  evaluator:
+                    type: lt
+                    params: [1]
+                  operator:
+                    type: and
+              refId: C
+
+      - uid: high-5xx
+        title: "5xx error rate above 5%"
+        condition: C
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5% of API requests are failing with 5xx"
+          description: "Sustained internal errors for five minutes — cart, checkout and catalogue behavior likely broken."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: 'sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              conditions:
+                - type: query
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  evaluator:
+                    type: gt
+                    params: [0.05]
+                  operator:
+                    type: and
+              refId: C
+
+  - orgId: 1
+    name: iloveshopping-security
+    folder: i-love-shopping
+    interval: 1m
+    rules:
+      - uid: failed-login-burst
+        title: "Failed-login spike"
+        condition: C
+        for: 0m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Over 10 failed logins in 10 minutes"
+          description: "Credential stuffing or a broken client path. Investigate the logs and consider temporary mitigation (WAF / CAPTCHA tightening)."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: 'change(ils_auth_login_failed_total[10m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              conditions:
+                - type: query
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  evaluator:
+                    type: gt
+                    params: [10]
+                  operator:
+                    type: and
+              refId: C

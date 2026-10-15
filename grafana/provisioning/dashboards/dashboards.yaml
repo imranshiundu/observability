@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: i-love-shopping dashboards
+    type: file
+    orgId: 1
+    folder: i-love-shopping
+    folderUid: iloveshopping
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      sectionsFromFolders: false

@@ -1,0 +1,12 @@
+apiVersion: 1
+
+# Alert channel: every alert lands as an email in the platform's MailHog
+# (running on the same compose network). Reviewers verify delivery visually.
+contactPoints:
+  - orgId: 1
+    name: mail-alerts
+    receivers:
+      - uid: mailhog-email
+        type: email
+        settings:
+          addresses: ops@iloveshopping.local
