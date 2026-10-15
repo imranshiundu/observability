@@ -108,7 +108,7 @@ groups:
           - refId: A
             datasourceUid: prometheus
             model:
-              expr: 'change(ils_auth_login_failed_total[10m])'
+              expr: 'increase(ils_auth_login_failed_total[10m])'
               intervalMs: 1000
               maxDataPoints: 43200
               refId: A
@@ -128,6 +128,50 @@ groups:
                   evaluator:
                     type: gt
                     params: [10]
+                  operator:
+                    type: and
+              refId: C
+
+  - orgId: 1
+    name: iloveshopping-performance
+    folder: i-love-shopping
+    interval: 1m
+    rules:
+      - uid: slow-api-p95
+        title: "API p95 latency above 2s"
+        condition: C
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sustained API latency regression"
+          description: "p95 request latency has exceeded two seconds for five minutes."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: 'histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[10m])) by (le))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              conditions:
+                - type: query
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  evaluator:
+                    type: gt
+                    params: [2]
                   operator:
                     type: and
               refId: C

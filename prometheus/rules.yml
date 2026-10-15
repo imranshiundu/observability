@@ -30,13 +30,13 @@ groups:
           description: "Sustained internal errors for five minutes — customers are likely affected."
 
       - alert: FailedLoginsSpike
-        expr: change(ils_auth_login_failed_total[10m]) > 10
+        expr: increase(ils_auth_login_failed_total[10m]) > 10
         for: 0m
         labels:
           severity: warning
-          annotations:
-            summary: "Burst of failed logins"
-            description: "Over ten failed login attempts in ten minutes — possible credential stuffing or a broken auth dependency."
+        annotations:
+          summary: "Burst of failed logins"
+          description: "Over ten failed login attempts in ten minutes — possible credential stuffing or a broken auth dependency."
 
   - name: iloveshopping-performance
     rules:
