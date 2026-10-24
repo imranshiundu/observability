@@ -1,5 +1,7 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -11,14 +13,42 @@
       "type": "stat",
       "title": "Total revenue (paid orders)",
       "description": "Sum of totals across CONFIRMED/PROCESSING/SHIPPED/DELIVERED orders.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "currencyKES", "decimals": 0 }, "overrides": [] },
-      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" }, "textMode": "value", "colorMode": "value", "graphMode": "area" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKES",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area"
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT coalesce(sum(total), 0) AS revenue FROM orders WHERE status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND created_at BETWEEN $__timeFrom() AND $__timeTo()",
           "format": "table"
@@ -30,14 +60,42 @@
       "type": "stat",
       "title": "Average order value",
       "description": "Mean total across completed orders in the selected range.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "currencyKES", "decimals": 2 }, "overrides": [] },
-      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" }, "textMode": "value", "colorMode": "value", "graphMode": "area" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKES",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area"
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT coalesce(round(avg(total), 2), 0) AS aov FROM orders WHERE status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND created_at BETWEEN $__timeFrom() AND $__timeTo()",
           "format": "table"
@@ -49,14 +107,59 @@
       "type": "gauge",
       "title": "Cart abandonment (stale unpaid)",
       "description": "Share of orders whose payment never completed within 30 minutes.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 25 }, { "color": "red", "value": 50 }]}, "mappings": []}, "overrides": [] },
-      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 25
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE status IN ('PENDING','EXPIRED') AND created_at < now() - interval '30 minutes') / nullif(count(*),1), 1) AS abandoned_pct FROM orders WHERE created_at BETWEEN $__timeFrom() AND $__timeTo()",
           "format": "table"
@@ -68,14 +171,41 @@
       "type": "stat",
       "title": "Orders in range",
       "description": "Live counter of successfully placed (i.e., paid) orders.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
-      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
-      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" }, "textMode": "value", "colorMode": "value", "graphMode": "area" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area"
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "increase(ils_orders_paid_total[$__range])",
           "instant": true
         }
@@ -86,14 +216,46 @@
       "type": "timeseries",
       "title": "Daily revenue",
       "description": "Paid-order revenue per day, in KES.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
-      "fieldConfig": { "defaults": { "unit": "currencyKES", "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2, "pointSize": 5 } }, "overrides": [] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false }, "tooltip": { "mode": "single", "sort": "desc" } },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKES",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "desc"
+        }
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT date_trunc('day', created_at) AS \"time\", sum(total) AS revenue FROM orders WHERE status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY 1 ORDER BY 1",
           "format": "time_series"
@@ -105,21 +267,49 @@
       "type": "timeseries",
       "title": "Registrations over time",
       "description": "New accounts per day.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 80 } }, "overrides": [] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false } },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT date_trunc('day', created_at) AS \"time\", count(*) AS registered FROM users WHERE created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY 1 ORDER BY 1",
           "format": "time_series"
         },
         {
           "refId": "B",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "increase(ils_users_registered_total[$__range])",
           "instant": true
         }
@@ -130,14 +320,40 @@
       "type": "bargauge",
       "title": "Revenue by category",
       "description": "How much each product category contributes to the revenue pool.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
-      "fieldConfig": { "defaults": { "unit": "currencyKES", "custom": {} }, "overrides": [] },
-      "options": { "orientation": "horizontal", "reduceOptions": { "calcs": ["sum"], "fields": "" }, "showUnfilled": true },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKES",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT c.name AS category, sum(oi.total)::float8 AS revenue FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN categories c ON p.category_id = c.id JOIN orders o ON oi.order_id = o.id WHERE o.status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND o.created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY c.name ORDER BY 2 DESC",
           "format": "table"
@@ -149,14 +365,47 @@
       "type": "piechart",
       "title": "Orders by customer type",
       "description": "Share of orders from registered accounts vs guests.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
-      "fieldConfig": { "defaults": { "custom": {} }, "overrides": [] },
-      "options": { "pieType": "donut", "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "displayLabels": ["name","percent"], "reduceOptions": { "calcs": ["sum"], "values": false } },
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "values": false
+        }
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT (CASE WHEN user_id IS NULL THEN 'guest' ELSE 'registered' END) AS customer_type, count(*)::float8 AS orders FROM orders WHERE created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY 1",
           "format": "table"
@@ -166,16 +415,79 @@
     {
       "id": 9,
       "type": "timeseries",
-      "title": "Correlated: average order value — guests vs registered",
-      "description": "CORRELATED METRIC — only legible because we compare both purchase behaviors on the same axis: reveals whether logged-in buyers consistently spend more per order.",
-      "datasource": { "type": "postgres", "uid": "postgres" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 23 },
-      "fieldConfig": { "defaults": { "unit": "currencyKES", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 7 } }, "overrides": [{ "matcher": { "id": "byName", "options": "guest_avg" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]}, { "matcher": { "id": "byName", "options": "registered_avg" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]}] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": ["mean","lastNotNull"] } },
+      "title": "Correlated: average order value \u2014 guests vs registered",
+      "description": "CORRELATED METRIC \u2014 only legible because we compare both purchase behaviors on the same axis: reveals whether logged-in buyers consistently spend more per order.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKES",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 7
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guest_avg"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "registered_avg"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        }
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "postgres", "uid": "postgres" },
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
           "rawQuery": true,
           "rawSql": "SELECT date_trunc('day', created_at) AS \"time\", avg(total) FILTER (WHERE user_id IS NULL) AS guest_avg, avg(total) FILTER (WHERE user_id IS NOT NULL) AS registered_avg FROM orders WHERE status IN ('CONFIRMED','PROCESSING','SHIPPED','DELIVERED') AND created_at BETWEEN $__timeFrom() AND $__timeTo() GROUP BY 1 ORDER BY 1",
           "format": "time_series"
@@ -185,11 +497,19 @@
   ],
   "refresh": "30s",
   "schemaVersion": 41,
-  "tags": ["iloveshopping", "business"],
-  "templating": { "list": [] },
-  "time": { "from": "now-30d", "to": "now" },
+  "tags": [
+    "iloveshopping",
+    "business"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
   "timezone": "browser",
-  "title": "i-love-shopping · Business intelligence",
+  "title": "i-love-shopping \u00b7 Business intelligence",
   "uid": "ils-business-intelligence",
   "version": 1
 }

@@ -9,6 +9,15 @@ discovery.docker "platform" {
 discovery.relabel "platform" {
   targets = discovery.docker.platform.targets
 
+  // Only the platform's own containers - the docker socket sees every
+  // container on the host, including unrelated projects whose old log
+  // entries Loki rejects anyway ("entry too far behind").
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/iloveshopping-.*"
+    action        = "keep"
+  }
+
   rule {
     source_labels = ["__meta_docker_container_name"]
     regex         = "/(iloveshopping-.+)"

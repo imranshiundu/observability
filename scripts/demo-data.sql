@@ -3,6 +3,10 @@
 
 BEGIN;
 
+-- gen_random_bytes() lives in pgcrypto (built into the alpine image's
+-- contrib modules, but not enabled by default) — caught on first E2E run.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS demo_seed_marker (seeded_at timestamptz PRIMARY KEY);
 DO $$
 BEGIN
@@ -142,7 +146,8 @@ SELECT
   'Demo review',
   'Demo review content exercising the moderation metrics.',
   false, floor(random()*12)::int, 'APPROVED', r.ts, r.ts
-FROM demo_revs r;
+FROM demo_revs r
+ON CONFLICT (product_id, user_id) DO NOTHING;
 
 INSERT INTO demo_seed_marker (seeded_at) VALUES (now());
 

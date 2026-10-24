@@ -1,9 +1,10 @@
 apiVersion: 1
 
-# Unified-alerting rules provisioned in Grafana. Each rule evaluates a
-# Prometheus query every minute and emails the MailHog contact point when it
-# fires. Thresholds and `for:` windows were chosen to avoid fatigue:
-# genuine customer impact only, nothing that flaps.
+# Unified-alerting rules provisioned in Grafana (native v12 rule format —
+# each query carries its datasource model, instant/range flags and
+# relative time range; the C node is a threshold expression over A).
+# Every rule emails the MailHog contact point when it fires.
+
 groups:
   - orgId: 1
     name: iloveshopping-availability
@@ -23,31 +24,47 @@ groups:
           description: "Prometheus has not scraped the API's management endpoint for over a minute; guests and customers are cut off."
         data:
           - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
             datasourceUid: prometheus
             model:
-              expr: 'up{job="iloveshopping-api"}'
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'sum(up{job="iloveshopping-api"})'
+              instant: true
               intervalMs: 1000
+              legendFormat: __auto
               maxDataPoints: 43200
+              range: false
               refId: A
           - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
             datasourceUid: __expr__
             model:
-              type: threshold
-              expression: A
-              intervalMs: 1000
-              maxDataPoints: 43200
               conditions:
-                - type: query
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
                   query:
                     params: [A]
                   reducer:
+                    params: []
                     type: last
-                  evaluator:
-                    type: lt
-                    params: [1]
-                  operator:
-                    type: and
-              refId: C
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              type: threshold
 
       - uid: high-5xx
         title: "5xx error rate above 5%"
@@ -62,31 +79,47 @@ groups:
           description: "Sustained internal errors for five minutes — cart, checkout and catalogue behavior likely broken."
         data:
           - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
             datasourceUid: prometheus
             model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
               expr: 'sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))'
+              instant: true
               intervalMs: 1000
+              legendFormat: __auto
               maxDataPoints: 43200
+              range: false
               refId: A
           - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
             datasourceUid: __expr__
             model:
-              type: threshold
-              expression: A
-              intervalMs: 1000
-              maxDataPoints: 43200
               conditions:
-                - type: query
+                - evaluator:
+                    params: [0.05]
+                    type: gt
+                  operator:
+                    type: and
                   query:
                     params: [A]
                   reducer:
+                    params: []
                     type: last
-                  evaluator:
-                    type: gt
-                    params: [0.05]
-                  operator:
-                    type: and
-              refId: C
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              type: threshold
 
   - orgId: 1
     name: iloveshopping-security
@@ -106,31 +139,47 @@ groups:
           description: "Credential stuffing or a broken client path. Investigate the logs and consider temporary mitigation (WAF / CAPTCHA tightening)."
         data:
           - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
             datasourceUid: prometheus
             model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
               expr: 'increase(ils_auth_login_failed_total[10m])'
+              instant: true
               intervalMs: 1000
+              legendFormat: __auto
               maxDataPoints: 43200
+              range: false
               refId: A
           - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
             datasourceUid: __expr__
             model:
-              type: threshold
-              expression: A
-              intervalMs: 1000
-              maxDataPoints: 43200
               conditions:
-                - type: query
+                - evaluator:
+                    params: [10]
+                    type: gt
+                  operator:
+                    type: and
                   query:
                     params: [A]
                   reducer:
+                    params: []
                     type: last
-                  evaluator:
-                    type: gt
-                    params: [10]
-                  operator:
-                    type: and
-              refId: C
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              type: threshold
 
   - orgId: 1
     name: iloveshopping-performance
@@ -150,28 +199,44 @@ groups:
           description: "p95 request latency has exceeded two seconds for five minutes."
         data:
           - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
             datasourceUid: prometheus
             model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
               expr: 'histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[10m])) by (le))'
+              instant: true
               intervalMs: 1000
+              legendFormat: __auto
               maxDataPoints: 43200
+              range: false
               refId: A
           - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
             datasourceUid: __expr__
             model:
-              type: threshold
-              expression: A
-              intervalMs: 1000
-              maxDataPoints: 43200
               conditions:
-                - type: query
+                - evaluator:
+                    params: [2]
+                    type: gt
+                  operator:
+                    type: and
                   query:
                     params: [A]
                   reducer:
+                    params: []
                     type: last
-                  evaluator:
-                    type: gt
-                    params: [2]
-                  operator:
-                    type: and
-              refId: C
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              type: threshold
