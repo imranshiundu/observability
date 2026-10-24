@@ -13,16 +13,20 @@ Built on the [platform's CI gated images](https://github.com/imranshiundu/integr
 
 ## Quick start
 
-The platform stack runs first, then this one joins its network:
+The platform stack runs first, then this one joins its network. From the platform repo:
 
 ```bash
-# platform, from the ziel repo's root
-bash start.sh --auto
+bash start.sh --observability    # platform + this stack, one command
+```
 
-# observability stack
-cd ../observability
+Or manually:
+
+```bash
+bash start.sh                    # platform first (deps + API + storefront)
+
+cd ../observability              # then the observability stack
 docker compose up -d
-bash scripts/seed-data.sh
+bash scripts/seed-data.sh        # 30 days of history (idempotent)
 bash scripts/simulate-traffic.sh --seconds 120
 ```
 
