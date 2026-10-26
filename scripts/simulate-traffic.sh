@@ -30,6 +30,7 @@ set -u
 
 API="${API_URL:-http://localhost:8080/api/v1}"
 SECONDS_TO_RUN=300
+WAVE_RATE="1.5"
 DO_BURST=false
 EMAIL="traffic-sim@demo.iloveshopping.ke"
 PASSWORD="demo-traffic-123!"
@@ -37,6 +38,7 @@ PASSWORD="demo-traffic-123!"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --seconds) SECONDS_TO_RUN="$2"; shift ;;
+    --rate) WAVE_RATE="$2"; shift ;;
     --burst) DO_BURST=true ;;
     *) echo "unknown: $1" >&2; exit 2 ;;
   esac
@@ -172,7 +174,7 @@ while [ "$(date +%s)" -lt "$END" ]; do
   [ $((N % 100)) -eq 0 ] && burst 12 &
 
   wait
-  sleep 1.5
+  sleep "$WAVE_RATE"
 done
 
 echo "simulate: done after $((N)) waves"
