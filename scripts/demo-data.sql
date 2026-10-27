@@ -80,7 +80,8 @@ BEGIN
     END IF;
 
     oid := gen_random_uuid()::text;
-    when_ := now() - (random() * interval '30 days');
+    -- random()*random() biases toward recent days so short ranges stay alive
+    when_ := now() - ((random() * random()) * interval '30 days');
 
     INSERT INTO orders (
       id, number, user_id, guest_email, cart_session_id, status,
@@ -133,7 +134,7 @@ END $demo$;
 
 -- reviews for the same products, weighted toward positive ratings
 WITH demo_revs AS (
-  SELECT p.id AS product_id, u.id AS user_id, now() - (random() * interval '30 days') AS ts,
+  SELECT p.id AS product_id, u.id AS user_id, now() - ((random() * random()) * interval '30 days') AS ts,
          3 + floor(random()*3)::int AS rating
   FROM products p CROSS JOIN generate_series(1, 3) s,
        LATERAL (SELECT id FROM users ORDER BY random() LIMIT 1) u

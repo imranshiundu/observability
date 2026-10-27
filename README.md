@@ -155,6 +155,16 @@ Both work against the platform described by `API_URL` (default `http://localhost
 - The platform exposes `/actuator/prometheus` on a separate management port (9090), never on the public API port. Only the internal network can reach it.
 - Grafana alert history lives in MailHog — the reviewer's proof an alert fired is an email, not a screenshot.
 
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Business/Product panels empty, Technical/Security fine | The BI + Product panels query Postgres history; they read the seeded 30-day window. If the seed never ran (or ran the pre-fix version that aborted on pgcrypto/unique-review errors) there is no history to show | `bash scripts/seed-data.sh` — it is idempotent; if it errors, the SQL message names the exact cause. Then reload the dashboard with the time range set to **Last 30 days** |
+| Panels empty right after the first seed | Grafana may remember a shorter time range from a previous visit | Set the time picker to **Last 30 days** |
+| Low-stock watchlist empty | Correct — no product is below ten units. It fills as sim checkouts drain stock | Run the simulator longer |
+| Alert email missing after a burst | The rule evaluates every minute and the alert needs >10 failures in 10 min | Run `--burst` twice, wait ~90 s, check MailHog; confirm the rule is not paused in Grafana → Alerting |
+| Grafana restarts on boot | Provisioning rejected a file — the log names it (`docker logs iloveshopping-grafana`) | Fix the named file; the shipped configs are verified against Grafana's current version |
+
 ## The three pillars — where traces stand
 
 Metrics and logs are first-class here (Prometheus + Loki, both used directly in the dashboards — the technical and security dashboards carry live log panels next to the numbers). Traces are a **recorded deferral**: the platform is a modular monolith whose request paths stay within one process, so per-request tracing adds infra (Tempo/OpenTelemetry) without adding an answer the four required dashboards need. The extension point is documented in `DEBT_LEDGER.md`; the OTel Java agent plus a Tempo service is the natural next step if the platform splits into services.
